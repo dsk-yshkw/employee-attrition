@@ -11,7 +11,14 @@ class DataLoader:
 
     def load_wave(self, survey_number: int) -> pd.DataFrame:
         csv_path = self._find_csv(survey_number)
-        df = pd.read_csv(csv_path, encoding="utf-8-sig", low_memory=False)
+        for enc in ("utf-8-sig", "shift-jis", "cp932"):
+            try:
+                df = pd.read_csv(csv_path, encoding=enc, low_memory=False)
+                if df.empty or df.shape[1] == 0:
+                    raise pd.errors.EmptyDataError
+                break
+            except UnicodeDecodeError:
+                continue
         df = self._replace_missing(df)
         df["wave"] = survey_number
         return df
@@ -24,7 +31,7 @@ class DataLoader:
                 continue
             try:
                 waves[num] = self.load_wave(num)
-            except FileNotFoundError:
+            except (FileNotFoundError, pd.errors.EmptyDataError):
                 pass
         return waves
 

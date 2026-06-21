@@ -1,4 +1,5 @@
 import os
+from typing import Dict
 import pandas as pd
 from src.config import MISSING_VALUES, SURVEY_NUMBERS
 
@@ -15,20 +16,29 @@ class DataLoader:
         df["wave"] = survey_number
         return df
 
-    def load_all_waves(self) -> dict[int, pd.DataFrame]:
+    def load_all_waves(self) -> Dict[int, pd.DataFrame]:
         waves = {}
         for num in SURVEY_NUMBERS:
             wave_dir = os.path.join(self.data_dir, str(num))
-            if os.path.isdir(wave_dir):
+            if not os.path.isdir(wave_dir):
+                continue
+            try:
                 waves[num] = self.load_wave(num)
+            except FileNotFoundError:
+                pass
         return waves
 
     def _find_csv(self, survey_number: int) -> str:
-        base = os.path.join(self.data_dir, str(survey_number), self.language)
-        for fname in os.listdir(base):
-            if fname.endswith(".csv"):
-                return os.path.join(base, fname)
-        raise FileNotFoundError(f"No CSV found for survey {survey_number} in {base}")
+        root = os.path.join(self.data_dir, str(survey_number))
+        # prefer language subdirectory (main survey data), fall back to root (weight data)
+        candidates = [os.path.join(root, self.language), root]
+        for base in candidates:
+            if not os.path.isdir(base):
+                continue
+            for fname in os.listdir(base):
+                if fname.endswith(".csv"):
+                    return os.path.join(base, fname)
+        raise FileNotFoundError(f"No CSV found for survey {survey_number} under {root}")
 
     def _replace_missing(self, df: pd.DataFrame) -> pd.DataFrame:
         for col, sentinel in MISSING_VALUES.items():

@@ -1,0 +1,35 @@
+# Data files (not to be published due to SSJDA contract and personal data protection)
+data/raw/
+data/processed/
+*.csv
+*.dta
+*.sav
+!data/synthetic/sample_synthetic.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Environment variables
+.env

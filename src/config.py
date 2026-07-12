@@ -64,6 +64,12 @@ SALARY_FEATURES = [
     "annual_income", "prev_annual_income", "salary_growth_rate",
 ]
 
+# Macro / real-income features (from data/macro/japan_cpi.csv).
+MACRO_FEATURES = [
+    "cpi", "inflation_rate", "real_annual_income",
+    "real_prev_annual_income", "real_salary_growth_rate",
+]
+
 # Columns that are categorical (nominal) and should be treated as such by models.
 CATEGORICAL_FEATURES = [
     "gender", "contract_type", "industry", "occupation", "position",

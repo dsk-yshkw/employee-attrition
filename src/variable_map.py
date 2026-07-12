@@ -19,6 +19,8 @@ wave by its survey year ``Y``. A worker's attrition between wave ``Y`` and wave
 # These four waves share the consistent ``yNN_`` column naming and a common
 # ``pkey``, and form the usable longitudinal panel (2022-2025).
 WAVES = {
+    2020: 1349,
+    2021: 1429,
     2022: 1523,
     2023: 1598,
     2024: 1730,
@@ -55,18 +57,32 @@ _SUFFIX = {
     "position": "q33",                               # managerial rank
     "weekly_hours": "q37_2",                         # hours worked per week
     # --- salary / income (previous calendar year) ------------------------
-    "annual_income": {2022: "q100_1", 2023: "q99_1", 2024: "q99_1", 2025: "q99_1"},
+    "annual_income": {
+        2020: "q94_1", 2021: "q100_1", 2022: "q100_1",
+        2023: "q99_1", 2024: "q99_1", 2025: "q99_1",
+    },
     # --- tenure ----------------------------------------------------------
     "current_job_start_year": {
-        2022: "qn99_11", 2023: "qn98_11", 2024: "qn98_11", 2025: "qn98_11",
+        2020: "qn93_11", 2021: "qn99_11", 2022: "qn99_11",
+        2023: "qn98_11", 2024: "qn98_11", 2025: "qn98_11",
     },
     # --- turnover intention (stated) -------------------------------------
     # 1=actively job-hunting, 2=wants to change (not acting),
     # 3=wants to change eventually, 4=no intention to change.
-    "intention": {2022: "q106", 2023: "q105", 2024: "q105", 2025: "q105"},
+    "intention": {
+        2020: "q100", 2021: "q106", 2022: "q106",
+        2023: "q105", 2024: "q105", 2025: "q105",
+    },
     # --- retrospective job events (past year, MA: 1=selected) ------------
-    "ev_quit": {2022: "q57_1", 2023: "q57_1", 2024: "q58_1", 2025: "q58_1"},
-    "ev_started_job": {2022: "q57_2", 2023: "q57_2", 2024: "q58_2", 2025: "q58_2"},
+    # Item battery number shifts across waves (Q53/Q59/Q57/Q58).
+    "ev_quit": {
+        2020: "q53_1", 2021: "q59_1", 2022: "q57_1",
+        2023: "q57_1", 2024: "q58_1", 2025: "q58_1",
+    },
+    "ev_started_job": {
+        2020: "q53_2", 2021: "q59_2", 2022: "q57_2",
+        2023: "q57_2", 2024: "q58_2", 2025: "q58_2",
+    },
 }
 
 

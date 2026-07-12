@@ -8,6 +8,9 @@ data/processed/
 # the pipeline with --synthetic out of the box.
 !data/synthetic/
 !data/synthetic/*.csv
+# Macro data (public official CPI statistics) is bundled for reproducibility.
+!data/macro/
+!data/macro/*.csv
 
 # Python
 __pycache__/

@@ -30,8 +30,23 @@ and XGBoost (optional).
 JPSED renumbers survey questions across years (e.g. annual income is
 `y22_q100_1` in 2022 but `y23_q99_1` in 2023). `src/variable_map.py` maps each
 concept to the correct per-wave column so the rest of the pipeline uses stable
-*canonical* names. The usable longitudinal panel is the 2022–2025 waves
-(SSJDA 1523 / 1598 / 1730 / 1775), which share `pkey` and consistent naming.
+*canonical* names. The panel currently spans the **2020–2025 waves**
+(SSJDA 1349 / 1429 / 1523 / 1598 / 1730 / 1775), which share `pkey`; earlier
+waves (2016–2019, uppercase `Y17_`/`PKEY` naming) can be added to reach a
+10-year panel.
+
+### Macro / real income
+
+Public Japanese CPI (`data/macro/japan_cpi.csv`, 2020=100, Statistics Bureau of
+Japan) is merged onto the panel to deflate nominal income. Because JPSED wave `Y`
+reports income for calendar year `Y-1`, income is deflated by CPI of `Y-1`. The
+2022–2024 waves show the inflation story clearly: mean **nominal** income rose
+(~361→370 man-yen) while mean **real** income *fell* (~361→350). Note that CPI /
+inflation / real-income features do **not** improve single-year attrition AUC —
+within one test year they are constant or monotonic transforms of nominal
+values, so they carry no cross-sectional rank information. Their role is in the
+multi-year simulation (inflation scenarios) and the real-wage labor-supply
+elasticity, not static prediction. Toggle with `FeatureAssembler(include_macro=...)`.
 
 ## Data
 
@@ -108,17 +123,22 @@ result = run_experiment(pb, fa, TARGET_SEPARATION, test_year=2024, model_type="h
 print(result.metrics["auc_roc"], result.importance.sort_values().tail(5))
 ```
 
-## Results (original JPSED data, 2022–2025)
+## Results (original JPSED data, 2020–2025 panel)
 
-Time-based split; employees only. Indicative numbers from the current pipeline:
+Time-based split; employees only (train ≤ test_year-1). Separation test = 2024,
+intention test = 2025. Indicative numbers from the current pipeline:
 
 | Target | Model | Base rate | ROC-AUC | PR-AUC |
 |---|---|---|---|---|
 | Actual separation (next year) | Logistic | 0.08 | 0.65 | 0.14 |
-| Actual separation (next year) | HistGBM | 0.08 | 0.70 | 0.17 |
-| Actual separation (next year) | XGBoost | 0.08 | 0.72 | — |
-| Turnover intention | Logistic | 0.19 | 0.65 | 0.29 |
+| Actual separation (next year) | HistGBM | 0.08 | 0.70 | 0.18 |
+| Actual separation (next year) | XGBoost | 0.08 | 0.73 | 0.19 |
+| Turnover intention | Logistic | 0.19 | 0.65 | 0.28 |
 | Turnover intention | HistGBM | 0.19 | 0.66 | 0.30 |
+| Turnover intention | XGBoost | 0.19 | 0.67 | 0.31 |
+
+Macro (CPI / real-income) features leave single-year AUC essentially unchanged
+(±0.002) for the reason given under [Macro / real income](#macro--real-income).
 
 Top predictors of actual separation: **tenure**, **age**, **annual income**,
 **contract type** (regular vs non-regular). Raw salary growth rate contributes

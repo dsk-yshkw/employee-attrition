@@ -1,18 +1,22 @@
+"""Employment features from canonical variables."""
+
 import pandas as pd
 
 
 class EmploymentFeatureBuilder:
     def build(self, df: pd.DataFrame) -> pd.DataFrame:
         out = pd.DataFrame(index=df.index)
-        out["employment_type"] = df.get("Q17")     # 就業形態
-        out["contract_type"] = df.get("Q18")       # 雇用形態（正規/非正規）
-        out["industry"] = df.get("Q28")            # 業種
-        out["firm_size"] = df.get("Q29")           # 従業員規模
-        out["occupation"] = df.get("Q30")          # 職種
-        out["has_fixed_term"] = df.get("Q31")      # 有期雇用か
-        out["weekly_work_days"] = pd.to_numeric(df.get("Q34_1"), errors="coerce")
-        out["weekly_work_hours"] = pd.to_numeric(df.get("Q34_2"), errors="coerce")
-        out["managerial_position"] = df.get("Q35") # 役職
-        out["overtime_status"] = df.get("Q36")     # 残業状況
-        out["commute_time"] = df.get("Q40")        # 片道通勤時間
+        out["contract_type"] = pd.to_numeric(df.get("contract_type"), errors="coerce")  # Q19 1=regular..
+        out["industry"] = pd.to_numeric(df.get("industry"), errors="coerce")            # Q30
+        out["firm_size"] = pd.to_numeric(df.get("firm_size"), errors="coerce")          # Q31 ordinal
+        out["occupation"] = pd.to_numeric(df.get("occupation"), errors="coerce")        # Q32
+        out["position"] = pd.to_numeric(df.get("position"), errors="coerce")            # Q33 managerial rank
+        out["weekly_hours"] = pd.to_numeric(df.get("weekly_hours"), errors="coerce")    # Q37
+        out["is_regular"] = (out["contract_type"] == 1).astype("int8")
+
+        # Tenure = reference year (survey year - 1) minus current-job start year.
+        start_year = pd.to_numeric(df.get("current_job_start_year"), errors="coerce")
+        ref_year = pd.to_numeric(df.get("year"), errors="coerce") - 1
+        tenure = ref_year - start_year
+        out["tenure_years"] = tenure.where((tenure >= 0) & (tenure < 70))
         return out

@@ -1,27 +1,70 @@
+"""Project-wide constants for the JPSED attrition pipeline.
+
+Variable-to-column mapping lives in :mod:`src.variable_map`; this module holds
+value-code semantics, target definitions, and feature groupings that build on
+the canonical variable names.
+"""
+
+from src.variable_map import WAVES  # noqa: F401  (re-exported for convenience)
+
+PKEY = "pkey"
+
+# ---------------------------------------------------------------------------
+# Value-code semantics (canonical variables)
+# ---------------------------------------------------------------------------
+
+# Q17 employment status in December: codes 1-6 mean "had a job" (working or on
+# temporary leave), 7 = job-seeking (unemployed), 8-11 = not in labour force.
+EMPLOYED_STATUS_CODES = {1, 2, 3, 4, 5, 6}
+
+# Q18 work style: 1 = employed by a company/organisation (what we call an
+# "employee"); 2 = executive, 3-4 = self-employed, 5 = family worker, 6 = home work.
+EMPLOYEE_WORK_STYLE = 1
+
+# Q19 contract type: 1 = regular (seiki) employee.
+REGULAR_CONTRACT = 1
+
+# Q106/Q105 turnover intention codes.
+#   1 = wants to change jobs and is actively job-hunting
+#   2 = wants to change jobs but is not job-hunting
+#   3 = would like to change jobs eventually
+#   4 = has no intention of changing jobs
+INTENTION_ACTIVE = {1, 2}      # "active" turnover intention (default label)
+INTENTION_ANY = {1, 2, 3}      # any stated intention to eventually move
+
+# Sentinel / non-response codes to convert to NaN, per canonical variable.
+# JPSED uses large sentinels for numeric "unknown"/"NA" answers.
 MISSING_VALUES = {
-    "Q7": 999,
-    "Q34_1": 99,
-    "Q34_2": 9999,
-    "Q38": 999999,
-    "Q72": 99999,
-    "Q85_1": 99999,
-    "Q85_2": 99999,
-    "Q85_3": 99999,
-    "Q87": 99999,
+    "annual_income": [9999, 99999, 999999],
+    "weekly_hours": [999],
+    "youngest_child_age": [999],
+    "num_children": [99],
+    "current_job_start_year": [9999, 99999],
+    "age": [999],
 }
 
-DEMOGRAPHIC_VARS = ["Q1", "Q2", "Q3_1", "Q3_2", "Q12"]
+# ---------------------------------------------------------------------------
+# Target definitions
+# ---------------------------------------------------------------------------
+TARGET_SEPARATION = "attrition_separation"   # actual separation observed at t+1
+TARGET_INTENTION = "attrition_intention"     # stated turnover intention at t
 
-EMPLOYMENT_VARS = ["Q17", "Q18", "Q28", "Q29", "Q30", "Q31", "Q34_1", "Q34_2", "Q35", "Q36"]
+# ---------------------------------------------------------------------------
+# Feature groupings (canonical names)
+# ---------------------------------------------------------------------------
+DEMOGRAPHIC_FEATURES = [
+    "gender", "age", "education", "has_spouse", "has_child",
+    "num_children", "youngest_child_age",
+]
+EMPLOYMENT_FEATURES = [
+    "contract_type", "industry", "firm_size", "occupation",
+    "position", "weekly_hours", "tenure_years",
+]
+SALARY_FEATURES = [
+    "annual_income", "prev_annual_income", "salary_growth_rate",
+]
 
-SALARY_VARS = ["Q85_1", "Q85_2", "Q37", "Q38"]
-
-TARGET_VAR = "Q46_1"
-
-PKEY = "PKEY"
-
-SURVEY_NUMBERS = [
-    1088, 1164, 1165, 1227, 1228, 1279, 1280,
-    1349, 1350, 1429, 1430, 1439, 1440, 1441,
-    1523, 1524, 1598, 1599, 1730, 1731, 1775, 1776,
+# Columns that are categorical (nominal) and should be treated as such by models.
+CATEGORICAL_FEATURES = [
+    "gender", "contract_type", "industry", "occupation", "position",
 ]

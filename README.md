@@ -4,7 +4,34 @@ This repository contains code for modeling worker attrition behavior using the J
 
 ## Overview
 
-We build a machine learning model that predicts attrition probability using worker demographic attributes and salary growth rate as features, applied to longitudinal panel data.
+We build machine-learning models that predict a worker's probability of leaving
+their job **in the following year**, using demographic, household, employment
+and salary features from longitudinal panel data. The population is restricted
+to **wage/salary employees** (people employed by a company/organisation in
+December of the reference year).
+
+Two attrition targets are constructed and compared:
+
+- **Actual separation** (`attrition_separation`) — the worker reports in the
+  *next* wave that they quit/left a job during the intervening year
+  (JPSED Q57_1 / Q58_1, "仕事を辞めた・退職した"). This is realised behaviour;
+  base rate ≈ 8%/yr among employees.
+- **Turnover intention** (`attrition_intention`) — the worker states an active
+  intention to change jobs in the *current* wave (Q106/Q105 codes 1–2). This is
+  stated intent, not behaviour; base rate ≈ 19%.
+
+Models are trained with a **time-based split** (earlier waves → train, latest
+usable wave → test) and evaluated with ROC-AUC and PR-AUC. Backends:
+logistic regression, scikit-learn `HistGradientBoostingClassifier` (default),
+and XGBoost (optional).
+
+### Key implementation note
+
+JPSED renumbers survey questions across years (e.g. annual income is
+`y22_q100_1` in 2022 but `y23_q99_1` in 2023). `src/variable_map.py` maps each
+concept to the correct per-wave column so the rest of the pipeline uses stable
+*canonical* names. The usable longitudinal panel is the 2022–2025 waves
+(SSJDA 1523 / 1598 / 1730 / 1775), which share `pkey` and consistent naming.
 
 ## Data
 
@@ -19,23 +46,28 @@ A synthetic dataset that mimics the structure and statistical properties of the 
 ```
 employee-attrition/
 ├── src/
+│   ├── variable_map.py         # Per-wave column map -> canonical variable names
+│   ├── config.py               # Value-code semantics, targets, feature groups
 │   ├── data/
-│   │   ├── loader.py           # CSV loading and encoding handling
-│   │   └── panel_builder.py    # Merge multiple survey waves by PKEY
+│   │   ├── loader.py           # Load each wave's CSV, rename to canonical names
+│   │   └── panel_builder.py    # Person-year panel + separation/intention labels
 │   ├── features/
-│   │   ├── demographics.py     # Demographic features (age, gender, education, etc.)
-│   │   ├── employment.py       # Employment features (type, industry, firm size, etc.)
-│   │   └── salary.py           # Salary and salary growth rate computation
+│   │   ├── demographics.py     # Gender, age, education, spouse, children
+│   │   ├── employment.py       # Contract, industry, size, occupation, tenure, hours
+│   │   ├── salary.py           # Annual income + year-over-year growth rate
+│   │   └── assembler.py        # Combine feature builders into the model matrix
 │   ├── models/
-│   │   ├── attrition.py        # Attrition probability model
-│   │   └── evaluator.py        # Evaluation metrics (AUC, precision, recall, etc.)
-│   └── config.py               # Variable name mappings and constants
+│   │   ├── attrition.py        # HistGBM (default) / logistic / xgboost backends
+│   │   └── evaluator.py        # AUC, PR-AUC, ROC/PR plots, importance plots
+│   └── pipeline.py             # End-to-end experiment (build -> split -> evaluate)
 ├── data/
 │   └── synthetic/
-│       ├── generate_synthetic.py   # Synthetic data generation script
-│       └── sample_synthetic.csv    # Sample synthetic data (included in repo)
+│       ├── generate_synthetic.py   # Synthetic data generator (canonical schema)
+│       ├── 2022.csv .. 2025.csv    # Per-wave synthetic files (safe to publish)
+│       └── sample_synthetic.csv    # Combined synthetic panel
 ├── notebooks/
-│   └── simulation.ipynb        # Google Colab simulation notebook
+│   ├── attrition_analysis.ipynb    # EDA -> modelling -> evaluation -> comparison
+│   └── simulation.ipynb            # Original Colab notebook
 ├── DATA_ACCESS.md              # Instructions for accessing the original JPSED data
 ├── requirements.txt
 └── README.md
@@ -43,19 +75,65 @@ employee-attrition/
 
 ## Usage
 
-### With synthetic data (no application required)
+### Quick start with synthetic data (no application required)
+
+```bash
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+
+python data/synthetic/generate_synthetic.py   # writes data/synthetic/<year>.csv
+python -m src.pipeline --synthetic             # train + evaluate both targets
+```
+
+### With the original JPSED data
+
+```bash
+python -m src.pipeline --data-dir "/path/to/JPSED/data"
+```
+
+### As a library
 
 ```python
 from src.data.loader import DataLoader
 from src.data.panel_builder import PanelBuilder
-from src.features.salary import SalaryFeatureBuilder
-from src.models.attrition import AttritionModel
+from src.features.assembler import FeatureAssembler
+from src.pipeline import run_experiment
+from src.config import TARGET_SEPARATION
 
-loader = DataLoader(data_dir="data/synthetic/")
-panel = PanelBuilder(loader).build()
-model = AttritionModel()
-model.fit(panel)
+loader = DataLoader("/path/to/JPSED/data")        # or DataLoader("data/synthetic", synthetic=True)
+pb, fa = PanelBuilder(loader), FeatureAssembler()
+
+# Train on 2022-2023, test on 2024 (actual next-year separation).
+result = run_experiment(pb, fa, TARGET_SEPARATION, test_year=2024, model_type="histgbm")
+print(result.metrics["auc_roc"], result.importance.sort_values().tail(5))
 ```
+
+## Results (original JPSED data, 2022–2025)
+
+Time-based split; employees only. Indicative numbers from the current pipeline:
+
+| Target | Model | Base rate | ROC-AUC | PR-AUC |
+|---|---|---|---|---|
+| Actual separation (next year) | Logistic | 0.08 | 0.65 | 0.14 |
+| Actual separation (next year) | HistGBM | 0.08 | 0.70 | 0.17 |
+| Actual separation (next year) | XGBoost | 0.08 | 0.72 | — |
+| Turnover intention | Logistic | 0.19 | 0.65 | 0.29 |
+| Turnover intention | HistGBM | 0.19 | 0.66 | 0.30 |
+
+Top predictors of actual separation: **tenure**, **age**, **annual income**,
+**contract type** (regular vs non-regular). Raw salary growth rate contributes
+little; see the note below.
+
+### Note on "salary growth excluding scheduled raises"
+
+JPSED does not record a base-pay vs. scheduled-increment (定期昇給) breakdown, so
+`salary_growth_rate` is the raw year-over-year change and mixes scheduled raises
+with promotions, job changes and hours changes. It is included as a
+relative-change signal, with this limitation documented in `src/features/salary.py`.
+
+> `HistGradientBoostingClassifier` is the default so the pipeline runs without
+> native dependencies. XGBoost is optional; on macOS it needs OpenMP
+> (`brew install libomp`).
 
 ### With original JPSED data
 

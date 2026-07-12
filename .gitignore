@@ -4,7 +4,10 @@ data/processed/
 *.csv
 *.dta
 *.sav
-!data/synthetic/sample_synthetic.csv
+# Synthetic data is safe to publish (no real records) and is needed to run
+# the pipeline with --synthetic out of the box.
+!data/synthetic/
+!data/synthetic/*.csv
 
 # Python
 __pycache__/

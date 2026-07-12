@@ -187,6 +187,18 @@ than regular employees (0.014) or part-timers (0.008). Cross-sectional survey
 weights (`xa{YY}`) are available on the panel; weighting barely moves the
 aggregate attrition rate (0.083 → 0.084), a robustness check.
 
+### Feature-importance analysis (`src/models/interpret.py`)
+
+TreeSHAP on the XGBoost separation model (native categoricals, clean per-feature
+names) is the primary interpretability tool; permutation importance (AUC drop) is
+the cross-check. Global importance (mean |SHAP|): **tenure ≫ occupation > age >
+industry > contract type > real income**. Dependence is signed and monotonic —
+**higher real income lowers separation** (SHAP ≈ +0.06 at the bottom of the income
+distribution to −0.21 at the top) and **longer tenure strongly lowers it**
+(+0.65 at 0–1 year to −0.74 at 20+ years). The real-income dependence is the
+visual counterpart of the labour-supply elasticity. Caveat: tenure/age/income are
+correlated, so SHAP splits credit among them — read them as a group.
+
 ### With original JPSED data
 
 See [DATA_ACCESS.md](DATA_ACCESS.md) for data acquisition steps, then run `notebooks/simulation.ipynb` pointing `DATA_DIR` to your local or Google Drive data path.

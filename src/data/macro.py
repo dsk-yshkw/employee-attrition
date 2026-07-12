@@ -23,14 +23,17 @@ _MACRO_DIR = os.path.join(
 )
 _DEFAULT_CPI_PATH = os.path.join(_MACRO_DIR, "japan_cpi.csv")
 _DEFAULT_WAGE_PATH = os.path.join(_MACRO_DIR, "japan_wage_growth.csv")
+_DEFAULT_WAGE_IND_PATH = os.path.join(_MACRO_DIR, "japan_wage_growth_industry.csv")
 
 
 class MacroData:
     def __init__(self, cpi_path: str = _DEFAULT_CPI_PATH,
-                 wage_path: str = _DEFAULT_WAGE_PATH):
+                 wage_path: str = _DEFAULT_WAGE_PATH,
+                 wage_ind_path: str = _DEFAULT_WAGE_IND_PATH):
         self.cpi_path = cpi_path
         self.cpi = pd.read_csv(cpi_path)
         self.wage = pd.read_csv(wage_path) if os.path.isfile(wage_path) else None
+        self.wage_ind = pd.read_csv(wage_ind_path) if os.path.isfile(wage_ind_path) else None
 
     def frame(self) -> pd.DataFrame:
         return self.cpi
@@ -47,6 +50,14 @@ class MacroData:
         if self.wage is None:
             return pd.Series(dtype=float)
         return (self.wage.set_index("calendar_year")["wage_growth_pct"] / 100.0)
+
+    def industry_wage_growth(self) -> pd.Series:
+        """Industry×year nominal wage growth (fraction), indexed by
+        (calendar_year, jsic_industry). MHLW Monthly Labour Survey."""
+        if self.wage_ind is None:
+            return pd.Series(dtype=float)
+        s = self.wage_ind.set_index(["calendar_year", "jsic_industry"])["wage_growth_pct"] / 100.0
+        return s
 
 
 class MacroFeatureBuilder:

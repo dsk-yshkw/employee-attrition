@@ -35,6 +35,7 @@ from src.models.attrition import AttritionModel
 from src.models.elasticity import elasticity_by_group
 from src.models.interpret import fit_xgb_for_shap, shap_analysis, dependence
 from src.features.assembler import FeatureAssembler
+from src.features.relative_wage import RelativeWageBuilder
 from src.config import TARGET_SEPARATION
 
 # Okabe-Ito palette
@@ -177,6 +178,22 @@ def main():
     ax.set_xlabel("Wage elasticity of job retention")
     ax.set_title("Extensive-margin labour-supply elasticity by contract type")
     save(fig, "fig_elasticity")
+
+    # ---- 7. relative wage growth -> separation --------------------------
+    rw = RelativeWageBuilder(mac).build(tf)
+    rd = tf.assign(short=-rw["relative_wage_growth"], isind=rw["market_is_industry"])
+    rd = rd[rd["isind"] == 1].dropna(subset=["short"])
+    if len(rd) > 1000:
+        rd["q"] = pd.qcut(rd["short"], 5, labels=["lead\n(own>mkt)", "Q2", "Q3", "Q4",
+                                                  "lag most\n(own<<mkt)"])
+        g = rd.groupby("q", observed=True)["separated"].mean()
+        fig, ax = plt.subplots(figsize=(6, 3.6))
+        ax.bar(range(len(g)), g.values, color=OI["vermillion"])
+        ax.set_xticks(range(len(g))); ax.set_xticklabels(g.index, fontsize=8)
+        ax.set_ylabel("Separation rate")
+        ax.set_xlabel("Own wage growth relative to industry market (quintile)")
+        ax.set_title("Falling behind the market wage -> higher attrition")
+        save(fig, "fig_relwage")
 
     print("all figures written to", FIGDIR + "/")
 

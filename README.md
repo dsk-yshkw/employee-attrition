@@ -158,6 +158,35 @@ relative-change signal, with this limitation documented in `src/features/salary.
 > native dependencies. XGBoost is optional; on macOS it needs OpenMP
 > (`brew install libomp`).
 
+### Multi-year microsimulation (`src/models/microsim.py`)
+
+The transition sub-models (`src/models/transitions.py` — separation,
+re-employment, and nominal stayer/mover wages) are iterated forward to simulate a
+cohort over several years. **Backtest** (cohort = 2021 employees, models trained
+on ≤2020): simulated attrition 0.085 / 0.080 / 0.077 / 0.076 vs. actual
+0.079 / 0.082 / 0.083 / 0.078. A **+3pp inflation scenario** erodes mean real
+income from ~350 to ~309 man-yen by 2024 and nudges attrition up (correct
+direction, modest magnitude).
+
+### Sequence models (`src/models/sequence.py`)
+
+Do employment *histories* help? Next-year separation AUC (test = 2024): MLP
+(current year) 0.707, GRU 0.705, Transformer 0.704 — sequence structure adds
+essentially nothing over the current-year state (tenure already summarises
+history), and all neural models trail the tree baseline (XGBoost 0.728).
+Transformer is weakest, as expected for ≤8-step sequences.
+
+### Labour-supply elasticity (`src/models/elasticity.py`)
+
+Treating the separation logit as a random-utility discrete choice of job
+continuation, the **wage elasticity of retention** (extensive margin) from a
++10% real-wage perturbation is ≈ **0.013** overall — inelastic, as labour
+economics expects. Heterogeneity is the interesting part: dispatched workers
+(0.029) and fixed-term/contract workers (0.018–0.019) are far more wage-sensitive
+than regular employees (0.014) or part-timers (0.008). Cross-sectional survey
+weights (`xa{YY}`) are available on the panel; weighting barely moves the
+aggregate attrition rate (0.083 → 0.084), a robustness check.
+
 ### With original JPSED data
 
 See [DATA_ACCESS.md](DATA_ACCESS.md) for data acquisition steps, then run `notebooks/simulation.ipynb` pointing `DATA_DIR` to your local or Google Drive data path.

@@ -94,9 +94,11 @@ class AttritionModel:
                     ]), cat_cols),
                 ]
             )
+            kwargs = dict(self.kwargs)
+            class_weight = kwargs.pop("class_weight", "balanced")
             clf = LogisticRegression(
-                max_iter=2000, class_weight="balanced",
-                random_state=self.random_state, **self.kwargs,
+                max_iter=2000, class_weight=class_weight,
+                random_state=self.random_state, **kwargs,
             )
             return Pipeline([("pre", pre), ("clf", clf)])
 

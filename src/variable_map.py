@@ -64,6 +64,11 @@ _ALL = list(WAVES)
 _SUFFIX = {
     # --- identifiers -----------------------------------------------------
     "pkey": {"_raw": True},                          # resolved via _STYLE id column
+    # --- survey weight (cross-sectional; irregular column names) ---------
+    "cross_section_weight": {"_full": {
+        2017: "XA17", 2018: "X18", 2019: "XA19", 2020: "xa20", 2021: "x21",
+        2022: "xa22", 2023: "xa23", 2024: "xa24", 2025: "xa25",
+    }},
     # --- demographics (stable across 2017-2025) --------------------------
     "gender": "q1",
     "age": "q2",
@@ -120,6 +125,8 @@ def column_for(canonical: str, year: int):
     spec = _SUFFIX[canonical]
     if isinstance(spec, dict) and spec.get("_raw"):
         return id_col
+    if isinstance(spec, dict) and "_full" in spec:
+        return spec["_full"].get(year)               # explicit column, no prefix/case
     if isinstance(spec, dict):
         suffix = spec.get(year)
         if suffix is None:

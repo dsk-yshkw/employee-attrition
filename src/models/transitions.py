@@ -4,12 +4,18 @@ Four models describe how a worker moves from one year to the next:
 
 - ``separation``  P(separated | state)          -- among employees
 - ``reemployment`` P(employed next | separated)  -- among separators
-- ``wage_stay``   E[real income next | stayed]   -- regression
-- ``wage_move``   E[real income next | moved]    -- regression (new-job wage)
+- ``wage_stay``   E[nominal income next | stayed] -- regression
+- ``wage_move``   E[nominal income next | moved]  -- regression (new-job wage)
 
 Each is a scikit-learn HistGradientBoosting model (native NaN + categorical
 support). The simulator (see the microsimulation module) samples from these to
 propagate a synthetic population forward year by year.
+
+The classifiers use **no class re-weighting**: the simulation needs calibrated
+probabilities that reproduce the true base rates (e.g. ~8% separation), whereas
+the AUC-oriented :class:`~src.models.attrition.AttritionModel` uses balanced
+weights for ranking. Wage models predict **nominal** income so the simulator can
+deflate by a scenario CPI path.
 """
 
 import numpy as np
@@ -48,9 +54,11 @@ class TransitionModels:
 
     # -- fitting ------------------------------------------------------------
     def _clf(self):
+        # No class_weight: keep probabilities calibrated to the true base rate,
+        # which the simulation relies on.
         return _make(HistGradientBoostingClassifier(
             learning_rate=0.05, max_iter=300, l2_regularization=1.0,
-            categorical_features="from_dtype", class_weight="balanced",
+            categorical_features="from_dtype",
             random_state=self.random_state), self.feature_cols)
 
     def _reg(self):
@@ -70,17 +78,17 @@ class TransitionModels:
         self.models["reemployment"] = self._clf().fit(
             X[sep], frame.loc[sep, "employed_next"])
 
-        # 3) wage of stayers (not separated & employed next, income observed)
+        # 3) nominal wage of stayers (not separated & employed next, income obs.)
         stay = (frame["separated"] == 0) & (frame["employed_next"] == 1) \
-            & frame["real_income_next"].notna()
+            & frame["income_next"].notna()
         self.models["wage_stay"] = self._reg().fit(
-            X[stay], frame.loc[stay, "real_income_next"])
+            X[stay], frame.loc[stay, "income_next"])
 
-        # 4) wage of movers who re-employed
+        # 4) nominal wage of movers who re-employed
         move = (frame["separated"] == 1) & (frame["employed_next"] == 1) \
-            & frame["real_income_next"].notna()
+            & frame["income_next"].notna()
         self.models["wage_move"] = self._reg().fit(
-            X[move], frame.loc[move, "real_income_next"])
+            X[move], frame.loc[move, "income_next"])
         return self
 
     # -- prediction ---------------------------------------------------------
@@ -106,16 +114,19 @@ class TransitionModels:
         if sep.sum() > 0 and frame.loc[sep, "employed_next"].nunique() > 1:
             out["reemployment_auc"] = roc_auc_score(
                 frame.loc[sep, "employed_next"], self.p_reemploy(X[sep]))
+        # separation calibration: mean predicted vs observed base rate
+        out["separation_pred_rate"] = float(self.p_separate(X).mean())
+        out["separation_obs_rate"] = float(y.mean())
         stay = (frame["separated"] == 0) & (frame["employed_next"] == 1) \
-            & frame["real_income_next"].notna()
-        out["wage_stay_r2"] = r2_score(frame.loc[stay, "real_income_next"],
+            & frame["income_next"].notna()
+        out["wage_stay_r2"] = r2_score(frame.loc[stay, "income_next"],
                                        self.wage_stay(X[stay]))
         out["wage_stay_mae"] = mean_absolute_error(
-            frame.loc[stay, "real_income_next"], self.wage_stay(X[stay]))
+            frame.loc[stay, "income_next"], self.wage_stay(X[stay]))
         move = (frame["separated"] == 1) & (frame["employed_next"] == 1) \
-            & frame["real_income_next"].notna()
-        out["wage_move_r2"] = r2_score(frame.loc[move, "real_income_next"],
+            & frame["income_next"].notna()
+        out["wage_move_r2"] = r2_score(frame.loc[move, "income_next"],
                                        self.wage_move(X[move]))
         out["wage_move_mae"] = mean_absolute_error(
-            frame.loc[move, "real_income_next"], self.wage_move(X[move]))
+            frame.loc[move, "income_next"], self.wage_move(X[move]))
         return out

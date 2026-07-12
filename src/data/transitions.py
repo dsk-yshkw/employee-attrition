@@ -5,7 +5,12 @@ we record their feature state at ``t`` together with what happened by ``t+1``:
 
 - ``separated``      : reported quitting/leaving a job during the year (ev_quit).
 - ``employed_next``  : had a job in December of the next wave (emp_status 1-6).
-- ``real_income_next``: real annual income observed in wave ``t+1``.
+- ``income_next``     : *nominal* annual income observed in wave ``t+1`` (man-yen).
+- ``real_income_next``: real (CPI-deflated) annual income observed in wave ``t+1``.
+
+Wage sub-models are trained on the *nominal* next income so that the simulator
+can deflate by a scenario CPI path (sticky-nominal-wage assumption): higher
+inflation then mechanically erodes real income.
 
 These feed the transition sub-models (separation, re-employment, wage) that the
 multi-year microsimulation iterates forward.
@@ -32,15 +37,20 @@ class TransitionFrameBuilder:
 
         # Real income for every person-year (current-wave outcome).
         real_income = self.macro.build(panel)["real_annual_income"]
-        panel = panel.assign(real_income=real_income.values)
+        panel = panel.assign(
+            real_income=real_income.values,
+            nominal_income=pd.to_numeric(panel["annual_income"], errors="coerce").values,
+        )
 
         # Next-wave outcomes, aligned onto the current row by (pkey, year).
-        nxt = panel[[PKEY, "year", "emp_status", "ev_quit", "real_income"]].copy()
+        nxt = panel[[PKEY, "year", "emp_status", "ev_quit",
+                     "real_income", "nominal_income"]].copy()
         nxt["year"] = nxt["year"] - 1
         nxt = nxt.rename(columns={
             "emp_status": "emp_status_next",
             "ev_quit": "ev_quit_next",
             "real_income": "real_income_next",
+            "nominal_income": "income_next",
         })
         panel = panel.merge(nxt, on=[PKEY, "year"], how="left")
 
@@ -63,7 +73,7 @@ class TransitionFrameBuilder:
         X.index = panel.index
         out = pd.concat(
             [panel[[PKEY, "year", "separated", "employed_next",
-                    "real_income", "real_income_next"]], X],
+                    "real_income", "real_income_next", "income_next"]], X],
             axis=1,
         )
         return out.reset_index(drop=True), list(X.columns)

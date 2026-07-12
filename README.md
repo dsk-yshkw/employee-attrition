@@ -109,6 +109,17 @@ python -m src.pipeline --synthetic             # train + evaluate both targets
 python -m src.pipeline --data-dir "/path/to/JPSED/data"
 ```
 
+### Paper figures
+
+```bash
+python scripts/make_figures.py --data-dir "/path/to/JPSED/data"   # or --synthetic
+```
+
+Writes publication-quality PDF+PNG to `figures/` using the Okabe-Ito
+colourblind-safe palette: microsimulation backtest, inflation/COLA scenarios, the
+by-contract-type inflation response (distributional headline), SHAP dependence and
+global importance, and the labour-supply elasticity by contract type.
+
 ### As a library
 
 ```python

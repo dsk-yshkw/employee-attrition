@@ -17,16 +17,20 @@ from src.config import PKEY
 
 # Default to the repo-bundled CPI file, resolved relative to this module so it
 # works from any working directory (including a fresh Colab clone).
-_DEFAULT_CPI_PATH = os.path.join(
+_MACRO_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    "data", "macro", "japan_cpi.csv",
+    "data", "macro",
 )
+_DEFAULT_CPI_PATH = os.path.join(_MACRO_DIR, "japan_cpi.csv")
+_DEFAULT_WAGE_PATH = os.path.join(_MACRO_DIR, "japan_wage_growth.csv")
 
 
 class MacroData:
-    def __init__(self, cpi_path: str = _DEFAULT_CPI_PATH):
+    def __init__(self, cpi_path: str = _DEFAULT_CPI_PATH,
+                 wage_path: str = _DEFAULT_WAGE_PATH):
         self.cpi_path = cpi_path
         self.cpi = pd.read_csv(cpi_path)
+        self.wage = pd.read_csv(wage_path) if os.path.isfile(wage_path) else None
 
     def frame(self) -> pd.DataFrame:
         return self.cpi
@@ -34,6 +38,15 @@ class MacroData:
     def lookup(self) -> pd.DataFrame:
         """CPI indexed by calendar_year for fast joins."""
         return self.cpi.set_index("calendar_year")
+
+    def wage_growth(self) -> pd.Series:
+        """Society-wide nominal wage growth (fraction), indexed by calendar_year.
+
+        MHLW Monthly Labour Survey, total cash earnings YoY (all industries).
+        """
+        if self.wage is None:
+            return pd.Series(dtype=float)
+        return (self.wage.set_index("calendar_year")["wage_growth_pct"] / 100.0)
 
 
 class MacroFeatureBuilder:

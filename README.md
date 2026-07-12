@@ -30,10 +30,13 @@ and XGBoost (optional).
 JPSED renumbers survey questions across years (e.g. annual income is
 `y22_q100_1` in 2022 but `y23_q99_1` in 2023). `src/variable_map.py` maps each
 concept to the correct per-wave column so the rest of the pipeline uses stable
-*canonical* names. The panel currently spans the **2020–2025 waves**
-(SSJDA 1349 / 1429 / 1523 / 1598 / 1730 / 1775), which share `pkey`; earlier
-waves (2016–2019, uppercase `Y17_`/`PKEY` naming) can be added to reach a
-10-year panel.
+*canonical* names. The panel spans the **2017–2025 waves** (9 waves,
+SSJDA 1164 / 1227 / 1279 / 1349 / 1429 / 1523 / 1598 / 1730 / 1775; ~129k
+persons), which share `pkey`. Note the naming convention changes over time —
+2017–2019 use an uppercase `Y17_`/`PKEY` scheme, 2020–2025 a lowercase
+`y20_`/`pkey` scheme — both handled by `variable_map`. The 2016 (y16) wave has a
+different question structure (two-question employment block, education under Q12)
+and is not yet wired in.
 
 ### Macro / real income
 
@@ -123,7 +126,7 @@ result = run_experiment(pb, fa, TARGET_SEPARATION, test_year=2024, model_type="h
 print(result.metrics["auc_roc"], result.importance.sort_values().tail(5))
 ```
 
-## Results (original JPSED data, 2020–2025 panel)
+## Results (original JPSED data, 2017–2025 panel)
 
 Time-based split; employees only (train ≤ test_year-1). Separation test = 2024,
 intention test = 2025. Indicative numbers from the current pipeline:

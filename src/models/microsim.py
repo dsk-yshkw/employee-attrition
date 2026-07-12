@@ -51,16 +51,31 @@ class MicroSimulator:
 
     def simulate(self, init_state: pd.DataFrame, start_year: int, n_years: int,
                  seed: int = 0, cpi_override: pd.DataFrame = None,
-                 wage_noise_sd: float = 0.0) -> pd.DataFrame:
+                 wage_noise_sd: float = 0.0, cola_passthrough: float = 0.0,
+                 min_wage_nominal: float = None, group_col: str = None) -> pd.DataFrame:
         """Propagate ``init_state`` (wave ``start_year`` employees) forward.
 
         Returns a per-year aggregate frame with the separation (attrition) rate,
         re-employment rate, exit rate, surviving population and mean real income.
         The ``year`` column is the *from* wave-year of each transition (matching
         the panel's ``attrition_separation`` definition).
+
+        Wage-policy scenarios (applied to the predicted nominal wage each year):
+
+        - ``cola_passthrough`` in [0, 1]: cost-of-living adjustment. Nominal wages
+          are scaled by ``(1 + cola_passthrough * inflation/100)``. 0 = sticky
+          nominal (real income erodes with inflation); 1 = wages fully track
+          prices (real income protected). Contrasting the two isolates the
+          real-wage-erosion channel of attrition.
+        - ``min_wage_nominal``: a nominal annual wage floor (man-yen) applied to
+          every survivor — a minimum-wage policy lever.
+        - ``group_col``: a static feature (e.g. ``contract_type``); when set, the
+          per-year attrition rate is also broken down by that group.
         """
         rng = np.random.default_rng(seed)
         state = init_state.copy().reset_index(drop=True)
+        groups0 = (state[group_col].to_numpy() if group_col and group_col in state
+                   else None)
         year = start_year
         records = []
 
@@ -87,13 +102,20 @@ class MicroSimulator:
             if wage_noise_sd > 0:
                 new_nom[stay | mv_re] += rng.normal(
                     0, wage_noise_sd, int((stay | mv_re).sum()))
+
+            ref_year = year  # next wave (year+1) reports income for calendar `year`
+            cpi_next, infl_next = self._cpi_for(ref_year, cpi_override)
+            if cola_passthrough:                       # wage indexation to prices
+                new_nom = new_nom * (1 + cola_passthrough * infl_next / 100.0)
             new_nom = np.clip(new_nom, 5.0, None)
+            if min_wage_nominal is not None:           # nominal wage floor
+                new_nom = np.maximum(new_nom, min_wage_nominal)
 
             new_tenure = state["tenure_years"].to_numpy(dtype=float).copy()
             new_tenure[stay] += 1
             new_tenure[mv_re] = 0
 
-            records.append({
+            rec = {
                 "year": year,
                 "pop": int(len(state)),
                 "attrition_rate": float(sep.mean()),
@@ -101,12 +123,16 @@ class MicroSimulator:
                 "exit_rate": float(exit_mask.mean()),
                 "mean_real_income": float(np.nanmean(old_real)),
                 "mean_nominal_income": float(np.nanmean(old_nom)),
-            })
+            }
+            if groups0 is not None:
+                for gval in np.unique(groups0[~np.isnan(groups0)] if groups0.dtype.kind == "f" else groups0):
+                    gm = state[group_col].to_numpy() == gval
+                    if gm.any():
+                        rec[f"attrition_{group_col}={int(gval)}"] = float(sep[gm].mean())
+            records.append(rec)
 
-            # advance survivors to next year
+            # advance survivors to next year (deflate nominal by the scenario CPI)
             keep = ~exit_mask
-            ref_year = year  # next wave (year+1) reports income for calendar `year`
-            cpi_next, infl_next = self._cpi_for(ref_year, cpi_override)
             new_real = new_nom / (cpi_next / 100.0)
 
             nxt = state.copy()

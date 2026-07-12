@@ -187,6 +187,24 @@ than regular employees (0.014) or part-timers (0.008). Cross-sectional survey
 weights (`xa{YY}`) are available on the panel; weighting barely moves the
 aggregate attrition rate (0.083 → 0.084), a robustness check.
 
+**Panel-attrition weighting** (`src/data/weights.py`): JPSED's prior-year
+attrition weights `xa{t+1}_l{t}` re-weight the two-year continuing sample back to
+the population, correcting for selective drop-out (99.4% of transition rows are
+covered). Attrition-weighted separation rates are ~0.2–0.5 pp higher than
+unweighted (e.g. 2024: 0.079 → 0.081) — continuers slightly under-state
+attrition — while the retention elasticity is unchanged (0.0132 → 0.0129). The
+main conclusions are robust to panel-attrition weighting.
+
+### Simulation scenarios
+
+`MicroSimulator.simulate` supports wage-policy counterfactuals: `cola_passthrough`
+(0 = sticky nominal, 1 = wages indexed to inflation), `min_wage_nominal` (a wage
+floor), and `group_col` (per-group attrition). A +4pp inflation path erodes mean
+real income ~350 → 296 man-yen by 2024 with a small aggregate attrition rise;
+full wage indexation restores both to baseline. The effect concentrates on
+non-regular workers — dispatch attrition 0.175 → 0.207 vs regular 0.055 → 0.057 —
+matching the elasticity heterogeneity.
+
 ### Feature-importance analysis (`src/models/interpret.py`)
 
 TreeSHAP on the XGBoost separation model (native categoricals, clean per-feature

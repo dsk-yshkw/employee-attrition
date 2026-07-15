@@ -44,13 +44,17 @@ across waves (e.g. the event battery is Q50/Q55/Q59/Q53/Q59/Q57/Q58 across
 per-wave map before any modeling.
 
 Each employee-year is described by 23 features in four blocks: demographics and
-household (sex, age, education, spouse, children, youngest-child age), employment
-(contract type, industry, firm size, occupation, managerial rank, weekly hours,
-tenure), nominal pay (annual income, prior income, growth), and macro/real terms
-(CPI, inflation, real income and real growth). Real income deflates nominal income
-by the consumer price index of its reference calendar year (Statistics Bureau of
-Japan). External nominal wage growth — economy-wide and by industry×year — comes
-from the MHLW Monthly Labour Survey (sources in `data/macro/REFERENCES.md`).
+household (7: sex, age, education, has-spouse, has-child, number of children,
+youngest-child age), employment (8: contract type, a regular-employment dummy,
+industry, firm size, occupation, managerial rank, weekly hours, tenure), nominal
+pay (3: annual income, prior-year income, income growth), and macro/real terms
+(5: CPI, inflation, real income, prior-year real income, real income growth).
+Real income deflates nominal income by the consumer price index of its reference
+calendar year (Statistics Bureau of Japan). Separately from these model features,
+the relative-wage analysis of §4.4 uses external nominal wage growth —
+economy-wide and by industry×year — from the MHLW Monthly Labour Survey (sources
+in `data/macro/REFERENCES.md`); the market rate enters that analysis as a
+reference series, not as a predictor in the feature matrix.
 
 ### 4.1 Prediction benchmark
 

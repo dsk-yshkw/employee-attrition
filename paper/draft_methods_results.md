@@ -15,12 +15,33 @@ income and job events; we link individuals across waves by their panel id. We
 define an employee-year as a person who, in a given wave, was employed in December
 (Q17 ∈ {working, on leave}) and worked for a company or organization (Q18 = wage
 employee), excluding executives, the self-employed, family workers and home
-workers. Two attrition labels are used: **actual separation**, self-reported as
-"quit/left a job" during the year to the next wave (Q57/Q58; base rate ≈8%/yr),
-and **turnover intention**, stated in the current wave (Q106/Q105; ≈19%)
-[Table 1]. Because JPSED renumbers questions and changes its column-naming
-convention across waves, we harmonize every variable to a stable canonical name
-via a per-wave map before any modeling.
+workers. Two attrition labels are used [Table 1].
+
+**Actual separation** comes from JPSED's retrospective job-event battery
+("events at work during the past year", multiple answer; Q57/Q58 in recent
+waves), whose first item is *"I quit / left a job"* (仕事を辞めた・退職した). The
+timing makes this a genuine forward-looking label: the wave-*t* survey records
+employment as of December of year *t−1*, and the wave-*t+1* survey asks about
+events during calendar year *t* — exactly the interval between the two December
+snapshots. For a worker employed at the wave-*t* baseline, we therefore code
+separation = 1 if they report the quit event in wave *t+1* (base rate ≈8%/yr).
+This is a self-report of the worker's own action rather than an inference from
+changed job attributes; its one caveat is that "quit / left" need not be purely
+voluntary (§7).
+
+**Turnover intention** is stated in the current wave (Q106/Q105): *"currently
+want to change jobs and am searching"* (1), *"currently want to change jobs but
+am not searching"* (2), *"would like to change jobs eventually"* (3), *"no
+intention of changing jobs"* (4). We code intention = 1 for responses 1–2 — a
+present-tense desire to move, with or without active search — and 0 for the
+vaguer "eventually" and "no intention" responses (≈19%). (The pipeline also
+supports the broader coding that includes response 3; we report the stricter
+definition.)
+
+Because JPSED renumbers questions and changes its column-naming convention
+across waves (e.g. the event battery is Q50/Q55/Q59/Q53/Q59/Q57/Q58 across
+2017–2025), we harmonize every variable to a stable canonical name via a
+per-wave map before any modeling.
 
 Each employee-year is described by 23 features in four blocks: demographics and
 household (sex, age, education, spouse, children, youngest-child age), employment

@@ -78,8 +78,12 @@ For each employee-year with a following wave we fit four calibrated sub-models:
 - **Stayer wage** `w_stay(x) = E[nominal income next | stayed, x]`;
 - **Mover wage** `w_move(x) = E[nominal income next | quit & re-employed, x]`.
 
-All four are `HistGradientBoosting` models (native NaN + categorical support).
-Crucially, the classifiers use **no class re-weighting**: the simulation requires
+All four are gradient-boosted tree models (scikit-learn `HistGradientBoosting`),
+which fit our data without preprocessing: missing values are routed by a learned
+per-split direction rather than imputed — much of our missingness is structural
+(e.g., youngest-child age is asked only of parents) — and nominal codes such as
+industry are split as categorical sets rather than forced into a spurious numeric
+order. Crucially, the classifiers use **no class re-weighting**: the simulation requires
 probabilities calibrated to the true base rates (the AUC-oriented benchmark of
 §4.1 may reweight for ranking, but the generative model may not). Wage models
 predict **nominal** income so that the simulator can deflate by a scenario-specific

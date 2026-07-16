@@ -20,7 +20,8 @@ rates; and (iii) read the separation model as an extensive-margin labor-supply
 relation. The wage-elasticity of retention is positive but modest and much larger
 for non-regular workers; using external industry×year market wages, we show that
 *falling behind the market* — not relative position per se — raises separation,
-robust to year fixed effects. In counterfactuals, a +4pp inflation path erodes
+robust to year fixed effects. In counterfactuals, a four-percentage-point
+inflation shock erodes
 real wages and raises separation concentrated among non-regular workers, an effect
 neutralized by full wage indexation. The result is a bridge from predictive ML to
 interpretable, policy-relevant labor-supply microsimulation, with public code.
@@ -77,7 +78,7 @@ workers. (3) *Falling behind the market* raises separation — the effect is
 asymmetric (the shortfall matters, not symmetric relative position) and survives
 year fixed effects — echoing, at national scale and with external wage data, the
 firm-level relative-pay results of Card et al. (2012) and Dube et al. (2019). (4)
-In counterfactuals, a +4pp inflation path erodes real income (mean ≈350→296 man-yen
+In counterfactuals, a +4 percentage-point (pp) inflation path erodes real income (mean ≈350→296 man-yen
 over four years) with a small aggregate but sharply *distributional* attrition
 response — concentrated on non-regular workers (dispatch 0.175→0.207 vs regular
 ≈unchanged) — and full wage indexation restores both real income and attrition to

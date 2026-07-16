@@ -169,15 +169,21 @@ direction and shape.
 
 **Relative wage.** The outside option is the market wage, which rises with
 economy-wide pay. We therefore construct, for each worker, the gap between their
-own nominal wage growth and the market rate for the same period — using the
-**industry×year** market rate where available (leave-one-out at the JSIC-division
-level), which supplies within-year variation. We estimate linear probability
-models of separation on own growth, the market rate, the signed relative gap, and
-the rectified **shortfall** `(market − own)₊` (how far a worker has fallen behind),
-with **year fixed effects** and person-clustered standard errors [Table 5]. This
-is a descriptive/reduced-form identification: year FE absorb macro shocks and the
-market rate is set above the individual, but we do not claim a structural causal
-elasticity (§7).
+own nominal wage growth and the market rate for the same period. The market rate
+is **external to the panel**: industry×year nominal wage growth from the MHLW
+Monthly Labour Survey, with JPSED's detailed industry codes mapped to the major
+divisions of the Japan Standard Industrial Classification (JSIC) — so, e.g., all
+manufacturing workers observed in 2023 share the manufacturing division's 2023
+market rate — falling back to the all-industry rate where no division rate is
+available. Using divisions supplies within-year variation in the reference, and
+because the reference comes from an establishment survey rather than from the
+panel itself, a worker's own pay cannot enter their reference rate. We estimate
+linear probability models of separation on own growth, the market rate, the
+signed relative gap, and the rectified **shortfall** `(market − own)₊` (how far a
+worker has fallen behind), with **year fixed effects** and person-clustered
+standard errors [Table 5]. This is a descriptive/reduced-form identification:
+year FE absorb macro shocks and the market rate is set above the individual, but
+we do not claim a structural causal elasticity (§7).
 
 ---
 

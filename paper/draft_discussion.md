@@ -50,8 +50,9 @@ simulation, and only base-rate-accurate probabilities reproduce observed dynamic
 conditional associations, not structural causal parameters. Wages are not randomly
 assigned; unobserved worker quality can drive both pay and separation, and reverse
 causality is possible (workers likely to leave may receive — or be denied —
-raises). Year (and industry) fixed effects and the leave-one-out *market* wage,
-which is set above the individual, mitigate these threats, and the asymmetric
+raises). Year (and industry) fixed effects and the *external* market wage — an
+establishment-survey series set above the individual, which a worker's own pay
+cannot enter — mitigate these threats, and the asymmetric
 shortfall result is hard to rationalize as pure reverse causality; but we do not
 claim identification of a causal labor-supply elasticity. A causal treatment
 (worker fixed-effects conditional logit, instrumenting own-wage growth with the

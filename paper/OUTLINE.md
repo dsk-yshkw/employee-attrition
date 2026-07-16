@@ -121,9 +121,10 @@ Recommended: **#1** (states method + economic payoff). Keep "microsimulation",
 ### 4.4 Labor-supply interpretation
 - Separation logit as extensive-margin random-utility choice; wage-elasticity of
   retention = %Δ P(stay) per %Δ real wage; heterogeneity by contract type.
-- **Relative wage**: own vs industry×year market wage growth (leave-one-out);
-  identification within year (and industry) fixed effects; descriptive framing
-  with FE robustness, threats stated (endogeneity, ability).
+- **Relative wage**: own vs industry×year market wage growth (external MHLW
+  series, JPSED industry mapped to JSIC divisions); identification within year
+  (and industry) fixed effects; descriptive framing with FE robustness, threats
+  stated (endogeneity, ability).
 
 ## 5. Results
 

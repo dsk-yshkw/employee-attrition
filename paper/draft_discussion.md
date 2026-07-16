@@ -37,10 +37,10 @@ external market wages, the firm-level lessons of Card et al. (2012) and Dube et 
 **Methodological takeaway.** The recipe — learn calibrated one-step transition
 kernels with modern ML, validate them *generatively* against held-out years, then
 iterate them for multi-year forecasts and counterfactuals — is not specific to
-attrition. It offers dynamic microsimulation (Strand E) a data-driven alternative
-to hand-specified transition equations while preserving interpretability and
-policy use, and it gives ML attrition work (Strand A) a path from one-year scoring
-to multi-year, decision-relevant simulation. Calibration is the crux: the same
+attrition. It offers the dynamic-microsimulation tradition (§2) a data-driven
+alternative to hand-specified transition equations while preserving
+interpretability and policy use, and it gives ML turnover-prediction work a path
+from one-year scoring to multi-year, decision-relevant simulation. Calibration is the crux: the same
 model that ranks well for prediction (with class reweighting) is miscalibrated for
 simulation, and only base-rate-accurate probabilities reproduce observed dynamics.
 

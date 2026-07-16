@@ -96,29 +96,63 @@ held-out wave [Table 3].
 
 ### 4.3 Microsimulation
 
-We compose the sub-models into a discrete-time microsimulation. A base-year cohort
-of employees is initialized with its observed feature vectors; each simulated year
-every still-employed worker is advanced:
+We compose the sub-models into a discrete-time microsimulation (Algorithm 1). A
+base-year cohort of employees is initialized with its observed feature vectors;
+each simulated year, every still-employed worker faces a separation draw, then —
+if separated — a re-employment draw; wages are set by the stayer or mover wage
+model, the policy levers (indexation, wage floor) are applied to the nominal
+wage, and real income is obtained by deflating with the scenario CPI.
 
-1. draw separation `s ~ Bernoulli(p_s(x))`;
-2. if `s = 0` (stay): nominal income ← `w_stay(x)`, tenure += 1;
-3. if `s = 1` (separate): draw re-employment `r ~ Bernoulli(p_r(x))`; if
-   re-employed, nominal income ← `w_move(x)` and tenure ← 0; else the worker exits
-   the employed population;
-4. all survivors age by one year; nominal income is deflated by the (scenario) CPI
-   of the year to obtain real income; growth features are recomputed.
+```latex
+\begin{algorithm}[tb]
+\caption{Multi-year attrition microsimulation}
+\label{alg:microsim}
+\textbf{Input}: base-year employee states $\mathcal{X}=\{x_i\}$; fitted
+sub-models $p_s, p_r, w_{\mathrm{stay}}, w_{\mathrm{move}}$; scenario CPI path
+$\{P_t\}$ with inflation $\{\pi_t\}$\\
+\textbf{Parameter}: horizon $T$; COLA pass-through $\kappa\in[0,1]$; optional
+nominal wage floor $\underline{w}$\\
+\textbf{Output}: yearly aggregates $\{A_t\}_{t=1}^{T}$ (separation and exit
+rates, mean nominal and real income, cohort size)
+\begin{algorithmic}[1]
+\FOR{$t = 1$ \TO $T$}
+  \FORALL{workers $i \in \mathcal{X}$}
+    \STATE draw $s_i \sim \mathrm{Bernoulli}\big(p_s(x_i)\big)$
+    \IF{$s_i = 0$}
+      \STATE $w_i \leftarrow w_{\mathrm{stay}}(x_i)$;\quad
+             $\mathrm{tenure}_i \leftarrow \mathrm{tenure}_i + 1$
+    \ELSE
+      \STATE draw $r_i \sim \mathrm{Bernoulli}\big(p_r(x_i)\big)$
+      \IF{$r_i = 1$}
+        \STATE $w_i \leftarrow w_{\mathrm{move}}(x_i)$;\quad
+               $\mathrm{tenure}_i \leftarrow 0$
+      \ELSE
+        \STATE remove $i$ from $\mathcal{X}$ \COMMENT{exits employment}
+      \ENDIF
+    \ENDIF
+    \STATE $w_i \leftarrow \max\{\, w_i (1 + \kappa \pi_t),\ \underline{w} \,\}$
+           \COMMENT{indexation; wage floor}
+    \STATE $\mathrm{age}_i \leftarrow \mathrm{age}_i + 1$;\quad
+           real income $\leftarrow w_i / (P_t / 100)$;\quad update growth features
+  \ENDFOR
+  \STATE record $A_t$
+\ENDFOR
+\STATE \textbf{return} $\{A_t\}$
+\end{algorithmic}
+\end{algorithm}
+```
 
 Static attributes (education, industry, occupation, firm size, contract type,
-family) are held fixed; wages use the conditional mean plus small Gaussian noise;
+family) are held fixed; predicted wages receive small Gaussian noise;
 the cohort is closed (no new entrants). We **back-test** by training the
 sub-models on the earliest waves, initializing on the last training wave, and
 comparing the simulated annual separation rate to the actual rate in the held-out
 years [Fig backtest].
 
-Counterfactual **scenarios** override the inputs: an inflation path (`±k` pp on
-CPI), a cost-of-living adjustment `cola ∈ [0,1]` that scales nominal wages by
-`(1 + cola·inflation)` (0 = sticky nominal, 1 = wages fully track prices), a
-nominal wage floor (minimum wage), and per-group breakdowns [Table 4, Fig
+Counterfactual **scenarios** override Algorithm 1's inputs: the CPI path
+$\{P_t\}$ (e.g. +2/+4 pp inflation), the COLA pass-through $\kappa$ (0 = sticky
+nominal wages, 1 = wages fully track prices), the nominal wage floor
+$\underline{w}$ (minimum wage), and per-group breakdowns [Table 4, Fig
 scenarios, Fig contract].
 
 ### 4.4 Labor-supply interpretation

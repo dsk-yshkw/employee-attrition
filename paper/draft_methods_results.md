@@ -83,9 +83,13 @@ which fit our data without preprocessing: missing values are routed by a learned
 per-split direction rather than imputed — much of our missingness is structural
 (e.g., youngest-child age is asked only of parents) — and nominal codes such as
 industry are split as categorical sets rather than forced into a spurious numeric
-order. Crucially, the classifiers use **no class re-weighting**: the simulation requires
-probabilities calibrated to the true base rates (the AUC-oriented benchmark of
-§4.1 may reweight for ranking, but the generative model may not). Wage models
+order. Crucially, the classifiers here use **no class re-weighting**. Up-weighting
+rare positives is standard when probabilities are used only to *rank* workers by
+risk, as in the prediction benchmark of §4.1 [Table 2], but it inflates predicted
+probabilities far above the observed base rate. The simulation instead *draws*
+separation events from these probabilities and rolls the cohort forward — a
+generative use — so they must be calibrated: with re-weighted classifiers the
+simulated annual separation rate comes out several times the actual ≈8%. Wage models
 predict **nominal** income so that the simulator can deflate by a scenario-specific
 price path (a sticky-nominal-wage assumption). We validate each sub-model on a
 held-out wave [Table 3].

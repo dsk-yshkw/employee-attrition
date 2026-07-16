@@ -52,8 +52,9 @@ pay (3: annual income, prior-year income, income growth), and macro/real terms
 Real income deflates nominal income by the consumer price index of its reference
 calendar year (Statistics Bureau of Japan). Separately from these model features,
 the relative-wage analysis of §4.4 uses external nominal wage growth —
-economy-wide and by industry×year — from the MHLW Monthly Labour Survey (sources
-in `data/macro/REFERENCES.md`); the market rate enters that analysis as a
+economy-wide and by industry×year — from the Monthly Labour Survey of the
+Ministry of Health, Labour and Welfare (MHLW; sources in
+`data/macro/REFERENCES.md`); the market rate enters that analysis as a
 reference series, not as a predictor in the feature matrix.
 
 ### 4.1 Prediction benchmark

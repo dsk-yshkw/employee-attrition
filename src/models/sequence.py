@@ -25,7 +25,7 @@ try:
 except Exception:  # pragma: no cover
     _TORCH = False
 
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, average_precision_score
 from src.config import PKEY
 
 
@@ -157,11 +157,14 @@ def train_eval(kind, Xtr, Mtr, ytr, Xte, Mte, yte, max_len=8,
         logits = model(torch.from_numpy(Xte).to(device),
                        torch.from_numpy(Mte).to(device))
         prob = torch.sigmoid(logits).cpu().numpy()
-    return roc_auc_score(yte, prob)
+    return {"roc_auc": roc_auc_score(yte, prob),
+            "pr_auc": average_precision_score(yte, prob)}
 
 
 def run_comparison(frame, feature_cols, test_year, max_len=8, epochs=8, seed=0):
-    """Build sequences, split by year, train MLP/GRU/Transformer, return AUCs."""
+    """Build sequences, split by year, train MLP/GRU/Transformer.
+
+    Returns ({model: {"roc_auc", "pr_auc"}}, info)."""
     X, mask, y, yrs = build_sequences(frame, feature_cols, max_len=max_len)
     tr, te = yrs < test_year, yrs == test_year
     Xtr, Xte = standardise(X[tr], X[te], mask[tr], mask[te])

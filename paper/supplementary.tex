@@ -1,0 +1,129 @@
+% Supplementary Material — compiles standalone with the AAAI-27 author kit
+% (place next to aaai2027.sty). Anonymous: contains no author-identifying info.
+\documentclass[letterpaper]{article}
+\usepackage[submission]{aaai2027}
+\usepackage[hyphens]{url}
+\usepackage{graphicx}
+\urlstyle{rm}
+\def\UrlFont{\rm}
+\usepackage{natbib}
+\usepackage{caption}
+\frenchspacing
+\usepackage{booktabs}
+\usepackage{amssymb}
+\setcounter{secnumdepth}{1}
+\renewcommand\thesection{S\arabic{section}}
+\renewcommand\thetable{S\arabic{table}}
+\pdfinfo{/TemplateVersion (2027.1)}
+
+\title{Supplementary Material for\\ ``From Prediction to Policy: A Learning-Based Microsimulation of Employee Attrition and the Wage-Elasticity of Retention''}
+\author{Anonymous submission}
+\affiliations{~}
+
+\begin{document}
+\maketitle
+
+\section{Uncertainty Analysis}
+
+\paragraph{Simulation dispersion}
+The microsimulation is effectively deterministic at cohort scale. Repeating the
+backtest of the main paper (sub-models trained on the 2017--2020 waves,
+simulation initialized with the 2021 employee cohort) over ten seeds, the
+annual separation rate varies with a standard deviation of at most 0.002
+(Table~\ref{tab:sim_dispersion}), and end-year (2024) mean real income varies
+by 0.36 man-yen around a mean of 349.9 (1 man-yen $=$ 10{,}000 JPY).
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Year & Mean separation rate & SD (10 seeds) \\
+\midrule
+2021 & 0.0850 & 0.0012 \\
+2022 & 0.0800 & 0.0016 \\
+2023 & 0.0765 & 0.0016 \\
+2024 & 0.0755 & 0.0015 \\
+\bottomrule
+\end{tabular}
+\caption{Dispersion of the simulated annual separation rate across ten
+simulation seeds (backtest configuration of the main paper).}
+\label{tab:sim_dispersion}
+\end{table}
+
+\paragraph{Bootstrap confidence intervals for the prediction benchmark}
+We quantify sampling uncertainty in the separation benchmark (test wave 2024,
+$n=27{,}638$) with a paired bootstrap: 1{,}000 resamples of the test set,
+evaluating all six models on identical resamples. Table~\ref{tab:auc_ci}
+reports 95\% percentile intervals for each model's ROC-AUC and for the AUC
+advantage of XGBoost over every alternative. All gap intervals exclude zero:
+XGBoost's advantage is statistically significant not only over the neural
+sequence models and logistic regression but also over HistGradientBoosting.
+The GRU and Transformer intervals overlap the current-state MLP almost
+entirely, confirming that access to employment history does not improve
+prediction on these short ($\le 8$-wave) sequences.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Model & ROC-AUC [95\% CI] & Gap to XGBoost [95\% CI] \\
+\midrule
+XGBoost      & 0.728 [0.718, 0.738] & --- \\
+HistGBM      & 0.709 [0.698, 0.720] & $+$0.019 [0.014, 0.024] \\
+MLP          & 0.707 [0.695, 0.718] & $+$0.022 [0.015, 0.029] \\
+GRU          & 0.705 [0.695, 0.716] & $+$0.023 [0.016, 0.029] \\
+Transformer  & 0.704 [0.693, 0.714] & $+$0.025 [0.018, 0.031] \\
+Logistic     & 0.657 [0.645, 0.668] & $+$0.072 [0.062, 0.082] \\
+\bottomrule
+\end{tabular}
+\caption{Paired bootstrap (1{,}000 resamples) over the 2024 test set:
+ROC-AUC with 95\% percentile intervals, and the AUC gap of XGBoost over each
+alternative. Every gap interval excludes zero.}
+\label{tab:auc_ci}
+\end{table}
+
+\section{Reproducibility Details}
+
+\paragraph{Compute}
+All experiments run on a single consumer laptop (Apple M1 CPU, 16\,GB RAM,
+macOS~15.3; no GPU) under Python~3.9 with scikit-learn~1.6.1, XGBoost~2.1.4,
+statsmodels~0.14.6, PyTorch~2.8.0 (CPU), SHAP~0.49.1, pandas~2.3.3 and
+NumPy~2.0.2. The full pipeline --- panel construction through simulation and
+the uncertainty analysis of Section~S1 --- completes in under one hour.
+
+\paragraph{Runs and seeds}
+Each result reported in the main paper is a single run with a fixed seed
+(scikit-learn/XGBoost \texttt{random\_state}~$=$~42; PyTorch seed 0;
+simulation seed 1). The dispersion analysis of Section~S1 uses simulation
+seeds 1--10 and bootstrap seed 0.
+
+\paragraph{Hyperparameters}
+We performed no hyperparameter search; all values are fixed defaults chosen a
+priori. \emph{Benchmark models} --- logistic regression: median imputation,
+standardization, one-hot encoding, $C{=}1$, max 2{,}000 iterations, balanced
+class weights; HistGradientBoosting: learning rate 0.05, 400 iterations,
+$L_2{=}1.0$, native categorical splits, balanced class weights; XGBoost: 400
+trees, learning rate 0.05, max depth 5, subsample 0.8, column subsample 0.8.
+\emph{Transition sub-models}: HistGradientBoosting with learning rate 0.05,
+300 iterations, $L_2{=}1.0$; \emph{no} class re-weighting in the classifiers
+(calibration is required for the generative use, as discussed in the main
+paper) and absolute-error loss in the wage regressors. \emph{Sequence models}
+--- MLP: two hidden layers of width 64, dropout 0.2; GRU: hidden size 64;
+Transformer: $d_{\mathrm{model}}{=}64$, 4 heads, 2 layers, feed-forward width
+128, dropout 0.1; all trained with Adam (learning rate $10^{-3}$), batch size
+512, 8 epochs, positively re-weighted binary cross-entropy, history length
+$\le 8$. \emph{Microsimulation}: horizon 4 years; wage noise standard
+deviation 30 man-yen.
+
+\paragraph{Code and data}
+The accompanying anonymized code archive contains the full pipeline
+(harmonization map, loaders, feature builders, models, simulation, and the
+scripts that generate every table and figure, including
+\texttt{compute\_uncertainty.py} for Section~S1), a synthetic panel that runs
+the entire pipeline end-to-end without restricted data, and the public
+macroeconomic series (CPI; economy-wide and industry-level wage growth) with
+source documentation. The JPSED microdata cannot be redistributed; qualified
+researchers can obtain it from the Social Science Japan Data Archive, and the
+released code reproduces all results once the microdata is in place.
+
+\end{document}

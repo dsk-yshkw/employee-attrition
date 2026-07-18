@@ -90,6 +90,18 @@ coverage): weighted separation ~0.2–0.5pp higher; elasticity unchanged
 age > industry > contract > real income; real-income dependence monotone
 decreasing; tenure U-shaped (protective until near retirement).
 
+**Uncertainty (computed 2026-07, `scripts/compute_uncertainty.py`)**:
+simulation over 10 seeds — annual separation sd 0.0012–0.0016 (2024: 0.0755 ±
+0.0015), end-year real income sd 0.36 man-yen (effectively deterministic at
+cohort scale). Paired bootstrap (1,000 resamples, test=2024) ROC-AUC 95% CIs:
+XGBoost 0.728 [0.718, 0.738]; HistGBM 0.709 [0.698, 0.720]; MLP 0.707 [0.695,
+0.718]; GRU 0.705 [0.695, 0.716]; Transformer 0.704 [0.693, 0.714]; logistic
+0.657 [0.645, 0.668]. XGBoost's gap excludes zero vs EVERY alternative
+(vs HistGBM +0.019 [0.014, 0.024]; vs MLP +0.022 [0.015, 0.029]; vs GRU
++0.023; vs Transformer +0.025; vs logistic +0.072) — "trees beat sequence
+models" is now a tested claim, and even vs HistGBM the XGBoost edge is
+significant.
+
 ## 4. Framing decisions already made (do not relitigate silently)
 
 - **Descriptive, not causal**: elasticity/relative-wage results are conditional

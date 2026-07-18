@@ -67,12 +67,14 @@ from the author kit.
    adding: "each reported result is a single run with the fixed seed" (and the
    simulation-seed stability note in Robustness).
 10. Analysis beyond single-dimensional summaries (variation/confidence) —
-    **partial** (cluster-robust SEs for Table 5; simulation stability across
-    seeds asserted but without dispersion numbers; no CIs on AUCs).
-    Upgradable — see below.
-11. Significance judged with appropriate statistical tests — **partial**
-    (t-tests implicit in Table 5's clustered SEs; no tests for AUC
-    differences between models).
+    **yes** (computed 2026-07 via `scripts/compute_uncertainty.py`: simulation
+    dispersion over 10 seeds — annual separation sd ≤ 0.0016, end-year real
+    income sd 0.36 man-yen — and paired 1,000-resample bootstrap 95% CIs for
+    all six test AUCs; add the Robustness sentences to the paper).
+11. Significance judged with appropriate statistical tests — **yes**
+    (paired bootstrap: XGBoost's AUC gap excludes zero vs every alternative,
+    e.g. +0.019 [0.014, 0.024] over HistGBM, +0.022 [0.015, 0.029] over the
+    MLP; cluster-robust t-tests in Table 5).
 12. All final hyperparameters listed — **partial → yes** ⚠ with a short
     appendix table (values below).
 
@@ -99,6 +101,6 @@ E. **Appendix hyperparameter table** (→ C12 yes):
    - MLP/GRU: hidden 64; Transformer: d_model 64, 4 heads, 2 layers,
      dropout 0.1; all: Adam lr 1e-3, batch 512, 8 epochs, pos-weighted BCE.
    - Microsimulation: wage noise sd 30 man-yen; horizon 4; seed 1.
-F. (Optional, turns C10 into yes) Report dispersion: run the simulation over
-   ~10 seeds and report the sd of the annual separation rate, and/or bootstrap
-   95% CIs for the AUC gaps in Table 2. Can be computed on request.
+F. DONE (2026-07): `scripts/compute_uncertainty.py` computed the simulation
+   seed-dispersion and the paired bootstrap AUC CIs (results in HANDOFF and in
+   the suggested Robustness prose). Items C10 and C11 upgraded to yes.

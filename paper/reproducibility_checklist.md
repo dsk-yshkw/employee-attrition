@@ -80,17 +80,20 @@ from the author kit.
 
 ## Cheap upgrades before submission
 
-A. **LICENSE file** in the repo (MIT or CC-BY for data) → items D3, C4 fully yes.
-B. **Supplementary zip** (anonymized repo snapshot: src/, scripts/, synthetic
-   data, macro CSVs) uploaded with the submission → D2, C3 fully yes.
-C. **One sentence on infrastructure** (→ C7 yes), e.g.:
-   "All experiments run on a single consumer laptop (Apple-silicon CPU, 16 GB
-   RAM, macOS; Python 3.9) with scikit-learn 1.6, XGBoost 2.1, statsmodels
-   0.14 and PyTorch 2.8 (CPU); no GPUs required. End-to-end runtime is under
-   one hour."
-D. **One sentence on runs** (→ C9 yes): "Each reported result is a single run
-   with a fixed seed; simulation aggregates are stable across seeds."
-E. **Appendix hyperparameter table** (→ C12 yes):
+A. DONE: MIT LICENSE added to the repo (data-attribution note included).
+B. DONE (2026-07): anonymized snapshot built and verified (0 identifying
+   strings; LICENSE copyright and notebook repo-URL/paths scrubbed; 53 files,
+   ~0.6 MB zip). Location:
+   `My Drive/ColabNotebooks/employee-attrition/supplementary_code_anonymized.zip`
+   — upload this as supplementary material at submission.
+C. DONE: infrastructure paragraph drafted (Apple M1, 16 GB, macOS 15.3,
+   Python 3.9, sklearn 1.6.1 / XGBoost 2.1.4 / statsmodels 0.14.6 /
+   PyTorch 2.8.0 / SHAP 0.49.1; <1 h end-to-end) — in the
+   "Reproducibility Details" appendix block (see session notes / manuscript).
+D. DONE: runs-and-seeds paragraph drafted (single run, fixed seeds; dispersion
+   and bootstrap reported under Robustness) — same appendix block.
+E. DONE: hyperparameters consolidated in the "Reproducibility Details"
+   appendix block (values below verified against code):
    - XGBoost: n_estimators 400, learning_rate 0.05, max_depth 5,
      subsample 0.8, colsample_bytree 0.8.
    - HistGradientBoosting (benchmark & transition models): learning_rate 0.05,

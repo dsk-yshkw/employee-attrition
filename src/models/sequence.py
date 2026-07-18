@@ -127,8 +127,9 @@ if _TORCH:
 
 
 def train_eval(kind, Xtr, Mtr, ytr, Xte, Mte, yte, max_len=8,
-               epochs=8, batch=512, lr=1e-3, seed=0, device="cpu"):
-    """Train one sequence model and return test ROC-AUC."""
+               epochs=8, batch=512, lr=1e-3, seed=0, device="cpu",
+               return_probs=False):
+    """Train one sequence model; return test metrics (and probs if requested)."""
     if not _TORCH:
         raise RuntimeError("PyTorch is not installed")
     torch.manual_seed(seed)
@@ -157,8 +158,11 @@ def train_eval(kind, Xtr, Mtr, ytr, Xte, Mte, yte, max_len=8,
         logits = model(torch.from_numpy(Xte).to(device),
                        torch.from_numpy(Mte).to(device))
         prob = torch.sigmoid(logits).cpu().numpy()
-    return {"roc_auc": roc_auc_score(yte, prob),
-            "pr_auc": average_precision_score(yte, prob)}
+    metrics = {"roc_auc": roc_auc_score(yte, prob),
+               "pr_auc": average_precision_score(yte, prob)}
+    if return_probs:
+        return metrics, prob
+    return metrics
 
 
 def run_comparison(frame, feature_cols, test_year, max_len=8, epochs=8, seed=0):

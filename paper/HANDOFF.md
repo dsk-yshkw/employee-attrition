@@ -52,9 +52,12 @@ intention ≈ 0.19 (Q106/Q105 codes 1–2).
 **Prediction (time-split; separation test=2024, intention test=2025)**:
 - Separation: XGBoost ROC-AUC **0.728** / PR-AUC 0.195; HistGBM 0.709; logistic 0.657.
 - Intention: XGBoost 0.668 / PR-AUC 0.305.
-- Sequence models (MLP/GRU/Transformer on ≤8-step histories) do **not** beat trees;
-  Transformer worst. Macro features leave single-year AUC unchanged (year-constant
-  / monotone transforms) — their role is dynamic, not static.
+- Sequence models (≤8-step histories, separation test=2024): MLP (current state)
+  ROC-AUC 0.707 / PR-AUC 0.174; GRU 0.705 / 0.160; Transformer 0.704 / 0.166.
+  History adds nothing over the current-state MLP; all trail XGBoost (0.728),
+  though MLP ≈ HistGBM (0.709) — say "trail the best tree ensemble", not "trail
+  trees". Macro features leave single-year AUC unchanged (year-constant /
+  monotone transforms) — their role is dynamic, not static.
 
 **Transition sub-models (train <2023, test 2023)**: separation AUC 0.708,
 **calibrated** (pred 0.086 vs obs 0.083); re-employment AUC 0.703; stayer wage

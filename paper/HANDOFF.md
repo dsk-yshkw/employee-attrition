@@ -42,7 +42,17 @@ Microsimulation of Employee Attrition and the Wage-Elasticity of Retention.*
 Tables and figures are **generated** by `scripts/make_tables.py` and
 `scripts/make_figures.py` from the licensed microdata (not in the repo).
 
-## 3. Canonical numbers (frozen 2026-07; regenerate scripts before final freeze)
+## 3. Canonical numbers
+
+> **RE-FROZEN 2026-07 (post classification-bridge).** JPSED reclassified
+> industry/occupation codes from the 2023 wave; `classification_bridge.py` now
+> recodes 2023+ back to 2017–2022 coding. Several numbers below changed
+> slightly — **`paper/REVISION_NOTES.md` is the authoritative old→new list**
+> (headline: shortfall 0.083 unchanged; Table 4 scenarios and contract-type
+> inflation response identical; prediction/transition AUCs improved, e.g.
+> separation XGBoost 0.731, transition separation 0.725 with calibration
+> 0.082/0.083; SHAP order now tenure ≫ age > occupation; elasticity ≈0.014,
+> dispatch ≈0.031; market coefficient 0.092 (0.061)).
 
 **Data**: JPSED via SSJDA (surveys 1164/1227/1279/1349/1429/1523/1598/1730/1775),
 9 waves 2017–2025, ~129k persons, ~500k person-years; employees only.

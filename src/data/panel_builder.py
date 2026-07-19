@@ -28,10 +28,15 @@ class PanelBuilder:
 
     # -- assembly -----------------------------------------------------------
     def build(self) -> pd.DataFrame:
+        from src.features.classification_bridge import harmonize_classifications
+
         waves = self.loader.load_all_waves()
         panel = pd.concat(waves.values(), ignore_index=True)
         panel[PKEY] = pd.to_numeric(panel[PKEY], errors="coerce")
         panel = panel.dropna(subset=[PKEY])
+        # JPSED reclassified industry/occupation from the 2023 wave; recode those
+        # waves back to the 2017-2022 coding so categoricals are consistent.
+        panel = harmonize_classifications(panel)
         panel = panel.sort_values([PKEY, "year"]).reset_index(drop=True)
         return panel
 

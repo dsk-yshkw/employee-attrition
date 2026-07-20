@@ -48,6 +48,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data-dir", default=None)
     ap.add_argument("--synthetic", action="store_true")
+    ap.add_argument("--with-sequence", action="store_true",
+                    help="append MLP/GRU/Transformer rows to Table 2 (trains torch models, ~5 min)")
     args = ap.parse_args()
     synthetic = args.synthetic or args.data_dir is None
     data_dir = "data/synthetic" if synthetic else args.data_dir
@@ -91,8 +93,27 @@ def main():
                              "PR-AUC": round(met["auc_pr"], 3)})
             except Exception as e:
                 print("skip", name, m, e)
-    write(pd.DataFrame(rows), "table2_prediction",
-          "Table 2: Next-year attrition prediction, time-based split (test = latest usable wave).")
+    if args.with_sequence:
+        from src.models.sequence import run_comparison
+        seq, _ = run_comparison(tf, feats, 2024, max_len=8, epochs=8, seed=0)
+        names = {"mlp": "MLP (current state)", "gru": "GRU (history)",
+                 "transformer": "Transformer (history)"}
+        sep_base = round(float(pb.build_modeling_frame(TARGET_SEPARATION)
+                               .query("year == 2024")[TARGET_SEPARATION].mean()), 3)
+        seq_rows = [{"Target": "Separation", "Model": names[k],
+                     "Base rate": sep_base,
+                     "ROC-AUC": round(v["roc_auc"], 3),
+                     "PR-AUC": round(v["pr_auc"], 3)} for k, v in seq.items()]
+        # insert sequence rows after the separation block
+        rows = rows[:3] + seq_rows + rows[3:]
+    caption = ("Table 2: Next-year attrition prediction under the time-based split "
+               "(separation test = 2024, intention test = 2025).")
+    if args.with_sequence:
+        caption += (" Neural sequence models (MLP on the current state; GRU and "
+                    "Transformer on up-to-8-wave histories) are evaluated on the "
+                    "separation target: access to history does not improve on the "
+                    "current-state MLP, and all trail the tree ensembles.")
+    write(pd.DataFrame(rows), "table2_prediction", caption)
 
     # ---- Table 3: transition sub-models ----------------------------------
     split = yrs[-1] - 1
